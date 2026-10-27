@@ -70,7 +70,20 @@
   .sec > h3 { margin:0; padding:9px 14px; text-align:center; font-size:13px; font-weight:600; color:var(--accent2); letter-spacing:.3px; position:relative; border-bottom:1px solid var(--line); }
   .sec > h3::after { content:""; position:absolute; left:50%; bottom:-1px; width:46px; height:2px; transform:translateX(-50%); background:var(--accent); box-shadow:0 0 8px var(--accent); }
   .sec .pad { padding:12px 14px; }
-  .scroll { max-height:420px; overflow:auto; }
+  .scroll { max-height:520px; overflow:auto; }
+  .grp { border-top:1px solid var(--line); }
+  .grp:first-child { border-top:0; }
+  .grp > summary { list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:10px 14px; font-weight:600; user-select:none; }
+  .grp > summary::-webkit-details-marker { display:none; }
+  .grp > summary::before { content:"▸"; color:var(--accent2); margin-right:8px; transition:transform .12s; display:inline-block; }
+  .grp[open] > summary::before { transform:rotate(90deg); }
+  .grp > summary > span:first-child { flex:1; }
+  .grp > summary:hover { background:var(--card2); }
+  .cnt { font-size:11px; font-weight:500; color:var(--muted); }
+  .cnt.hot { color:var(--accent2); }
+  .subhead { padding:6px 14px; font-size:11px; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); background:var(--bg2); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .rows { padding-top:2px; padding-bottom:2px; }
+
   .search { padding:10px 14px 0; }
 
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); }
@@ -238,20 +251,46 @@
     return el("div", { class: "search" }, i);
   }
 
+  const openTabs = new Set();
   function toggleSection(a, s) {
-    const body = el("div", { class: "pad scroll" });
     const q = search.toggles.toLowerCase();
-    const list = s.toggles.filter((t) => t.title.toLowerCase().includes(q));
-    if (!list.length) body.append(el("div", { class: "muted", text: "No matches." }));
+    const list = s.toggles.filter((t) => (t.title + " " + (t.tab || "") + " " + (t.section || "")).toLowerCase().includes(q));
+    const body = el("div", { class: "scroll" });
+    if (!list.length) body.append(el("div", { class: "pad muted", text: "No matches." }));
+
+    // tab -> (sub tab / section) -> toggles, in the same order as the hub
+    const tabs = new Map();
     for (const t of list) {
-      const pk = a.userId + ":" + t.id, p = pending.get(pk);
-      if (p) { if (p.v === t.value || Date.now() > p.until) pending.delete(pk); else t.value = p.v; }
-      const cb = el("input", { type: "checkbox", checked: t.value, disabled: !a.online });
-      cb.onchange = () => {
-        pending.set(pk, { v: cb.checked, until: Date.now() + 25000 });
-        api("set", { key, userId: a.userId, id: t.id, value: cb.checked });
-      };
-      body.append(el("div", { class: "row" }, el("span", { text: t.title }), el("label", { class: "sw" }, cb, el("i"))));
+      const tab = t.tab || "Other";
+      const label = [t.sub && t.sub !== tab ? t.sub : "", t.section].filter(Boolean).join(" · ") || "General";
+      if (!tabs.has(tab)) tabs.set(tab, new Map());
+      const secs = tabs.get(tab);
+      if (!secs.has(label)) secs.set(label, []);
+      secs.get(label).push(t);
+    }
+    for (const [tab, secs] of tabs) {
+      const all = [...secs.values()].flat();
+      const onCount = all.filter((t) => { const p = pending.get(a.userId + ":" + t.id); return p ? p.v : t.value; }).length;
+      const d = el("details", { class: "grp" });
+      d.open = !!q || openTabs.has(tab);
+      d.addEventListener("toggle", () => { if (!q) { d.open ? openTabs.add(tab) : openTabs.delete(tab); } });
+      d.append(el("summary", {}, el("span", { text: tab }), el("span", { class: "cnt" + (onCount ? " hot" : ""), text: `${onCount} / ${all.length} on` })));
+      for (const [label, items] of secs) {
+        d.append(el("div", { class: "subhead", text: label }));
+        const wrap = el("div", { class: "pad rows" });
+        for (const t of items) {
+          const pk = a.userId + ":" + t.id, p = pending.get(pk);
+          if (p) { if (p.v === t.value || Date.now() > p.until) pending.delete(pk); else t.value = p.v; }
+          const cb = el("input", { type: "checkbox", checked: t.value, disabled: !a.online });
+          cb.onchange = () => {
+            pending.set(pk, { v: cb.checked, until: Date.now() + 25000 });
+            api("set", { key, userId: a.userId, id: t.id, value: cb.checked });
+          };
+          wrap.append(el("div", { class: "row" }, el("span", { text: t.title }), el("label", { class: "sw" }, cb, el("i"))));
+        }
+        d.append(wrap);
+      }
+      body.append(d);
     }
     return section("Features", searchBox("toggles"), body);
   }
