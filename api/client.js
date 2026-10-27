@@ -40,6 +40,6 @@ module.exports = async (req, res) => {
     if (dead.length) await cmd("SREM", idsKey, ...dead);
     return reply(res, 200, { ok: true, commands, next: results[4] ? FAST : SLOW });
   } catch (e) {
-    return reply(res, 500, { ok: false, error: "server error" });
+    return reply(res, 500, { ok: false, error: String((e && e.message) || "server error").slice(0, 200) });
   }
 };
