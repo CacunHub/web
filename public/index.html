@@ -3,93 +3,143 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>Feral Panel</title>
+<link rel="icon" href="img/emblem.png">
 <style>
   :root {
-    --bg:#0e0f13; --panel:#16181f; --panel2:#1c1f28; --line:#262a35; --text:#e8eaf0; --muted:#8a91a3;
-    --accent:#e0642f; --accent2:#f08a55; --ok:#3fb97a; --bad:#e5534b;
-  }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      --bg:#f4f5f8; --panel:#fff; --panel2:#f0f1f5; --line:#dfe2ea; --text:#1b1d24; --muted:#6a7183;
-    }
+    --bg:#0b0b0e; --bg2:#121216; --card:#18181c; --card2:#202026; --line:#2a2a31; --line2:#383842;
+    --text:#ededf2; --muted:#8d8d99; --accent:#2f4bff; --accent2:#5d78ff; --glow:rgba(47,75,255,.35);
+    --ok:#69a67c; --bad:#eb335a;
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  header { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:5; }
-  header h1 { font-size:16px; margin:0; letter-spacing:.3px; }
-  header h1 b { color:var(--accent); }
-  .grow { flex:1; }
-  .pill { font-size:12px; padding:3px 9px; border-radius:99px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); }
-  .pill.ok { color:var(--ok); } .pill.bad { color:var(--bad); }
-  button { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 12px; cursor:pointer; }
+  html,body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  button { font:inherit; color:var(--text); background:var(--card2); border:1px solid var(--line2); border-radius:6px; padding:7px 14px; cursor:pointer; transition:border-color .12s, background .12s; }
   button:hover { border-color:var(--accent); }
   button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
-  input[type=text], input[type=password], input[type=search] { font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%; }
-  input:focus { outline:2px solid var(--accent); outline-offset:-1px; }
-  main { max-width:1100px; margin:0 auto; padding:16px; }
-  .login { max-width:380px; margin:12vh auto 0; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px; }
-  .login h2 { margin:0 0 4px; } .login p { color:var(--muted); margin:0 0 14px; }
-  .login .row { display:flex; gap:8px; }
-  .err { color:var(--bad); margin-top:10px; min-height:1.2em; }
-  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-  .tab { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; background:var(--panel); border:1px solid var(--line); cursor:pointer; }
-  .tab.sel { border-color:var(--accent); }
-  .dot { width:8px; height:8px; border-radius:50%; background:var(--bad); }
-  .dot.on { background:var(--ok); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
-  .stat { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
-  .stat .k { color:var(--muted); font-size:12px; } .stat .v { font-size:18px; font-weight:600; margin-top:2px; word-break:break-word; }
-  .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media (max-width:800px) { .cols { grid-template-columns:1fr; } }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
-  .card h3 { margin:0; padding:10px 14px; font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; }
-  .card .body { padding:10px 14px; overflow:auto; max-height:460px; }
-  .card .search { padding:8px 14px; border-bottom:1px solid var(--line); }
-  .trow { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); }
-  .trow:last-child { border-bottom:0; }
-  .sw { position:relative; width:38px; height:22px; flex:none; }
-  .sw input { opacity:0; width:100%; height:100%; margin:0; position:absolute; cursor:pointer; z-index:1; }
-  .sw span { position:absolute; inset:0; background:var(--line); border-radius:99px; transition:.15s; }
-  .sw span::after { content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
-  .sw input:checked + span { background:var(--accent); } .sw input:checked + span::after { transform:translateX(16px); }
-  .sw input:disabled { cursor:not-allowed; } .sw input:disabled + span { opacity:.45; }
-  .chips { display:flex; flex-wrap:wrap; gap:6px; } .chip { background:var(--panel2); border:1px solid var(--line); border-radius:99px; padding:2px 10px; font-size:12px; }
-  .muted { color:var(--muted); } table { width:100%; border-collapse:collapse; } td { padding:5px 0; border-bottom:1px solid var(--line); } td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
-  .empty { color:var(--muted); text-align:center; padding:40px 0; }
+  button.primary:hover { background:var(--accent2); border-color:var(--accent2); }
+  input[type=password], input[type=text], input[type=search] { font:inherit; color:var(--text); background:var(--bg2); border:1px solid var(--line2); border-radius:6px; padding:8px 11px; width:100%; }
+  input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
   .hidden { display:none !important; }
+  .muted { color:var(--muted); }
+
+  /* ------------------------------------------------ login (inside the kraken frame) */
+  #login { min-height:100%; display:flex; align-items:center; justify-content:center; padding:16px;
+    background:radial-gradient(ellipse at 50% 30%, rgba(47,75,255,.10), transparent 60%), var(--bg); }
+  .frame { position:relative; width:min(860px, 100%); aspect-ratio:2497/1930; background:url(img/frame.png) center/100% 100% no-repeat; filter:drop-shadow(0 0 26px rgba(47,75,255,.35)); }
+  .frame .card { position:absolute; left:50%; top:55%; transform:translate(-50%,-50%); width:52%; text-align:center;
+    background:rgba(18,18,22,.9); border:1px solid var(--line2); border-radius:10px; padding:5% 5% 4%; backdrop-filter:blur(6px); }
+  .frame h2 { margin:0; font-size:clamp(15px,2.4vw,20px); letter-spacing:.4px; }
+  .frame p { margin:4px 0 14px; color:var(--muted); font-size:clamp(11px,1.5vw,13px); }
+  .frame form { display:flex; flex-direction:column; gap:10px; }
+  .err { color:var(--bad); min-height:1.3em; margin-top:8px; font-size:13px; }
+  @media (max-width:560px) {
+    .frame { aspect-ratio:auto; background:none; filter:none; }
+    .frame .card { position:static; transform:none; width:100%; padding:22px; }
+    #login { background:var(--bg); }
+    .frame::before { content:""; display:block; height:90px; background:url(img/header3d.png) center/contain no-repeat; margin-bottom:14px; filter:drop-shadow(0 0 14px rgba(47,75,255,.45)); }
+  }
+
+  /* ------------------------------------------------ app shell */
+  #app { height:100%; display:flex; flex-direction:column; }
+  .topbar { display:flex; align-items:center; gap:10px; height:44px; padding:0 14px; background:var(--bg2); border-bottom:1px solid var(--line); flex:none; }
+  .brand { display:flex; align-items:center; gap:9px; font-weight:600; }
+  .brand img { height:26px; width:26px; object-fit:contain; filter:drop-shadow(0 0 6px var(--glow)); }
+  .brand b { color:var(--accent2); font-weight:700; }
+  .ver { color:var(--muted); font-weight:400; font-size:12px; }
+  .grow { flex:1; }
+  .status { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--bad); flex:none; }
+  .dot.on { background:var(--ok); box-shadow:0 0 8px rgba(105,166,124,.7); }
+  .body { flex:1; display:flex; min-height:0; }
+
+  .side { width:210px; flex:none; background:var(--bg2); border-right:1px solid var(--line); padding:12px 10px; overflow:auto; }
+  .side h4 { margin:2px 8px 8px; font-size:11px; letter-spacing:.9px; text-transform:uppercase; color:var(--muted); font-weight:600; }
+  .acct { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:6px; cursor:pointer; border:1px solid transparent; color:var(--text); }
+  .acct:hover { background:var(--card); }
+  .acct.sel { background:var(--card); border-color:var(--line2); box-shadow:inset 3px 0 0 var(--accent); }
+  .acct span.n { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .none { color:var(--muted); font-size:12px; padding:6px 8px; }
+
+  .main { flex:1; overflow:auto; padding:18px; position:relative; }
+  .banner { display:block; width:100%; max-height:120px; object-fit:contain; filter:drop-shadow(0 0 14px rgba(47,75,255,.45)); margin:2px 0 -2px; }
+  .col { position:relative; max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+
+  .sec { background:var(--card); border:1.5px solid var(--line); border-radius:8px; overflow:hidden; }
+  .sec > h3 { margin:0; padding:9px 14px; text-align:center; font-size:13px; font-weight:600; color:var(--accent2); letter-spacing:.3px; position:relative; border-bottom:1px solid var(--line); }
+  .sec > h3::after { content:""; position:absolute; left:50%; bottom:-1px; width:46px; height:2px; transform:translateX(-50%); background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .sec .pad { padding:12px 14px; }
+  .scroll { max-height:420px; overflow:auto; }
+  .search { padding:10px 14px 0; }
+
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); }
+  .stat { padding:11px 14px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); margin:0 -1px -1px 0; }
+  .stat .k { color:var(--muted); font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
+  .stat .v { font-size:17px; font-weight:600; margin-top:2px; word-break:break-word; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { background:var(--card2); border:1px solid var(--line2); border-radius:4px; padding:2px 9px; font-size:12px; }
+
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .sw { position:relative; width:36px; height:20px; flex:none; }
+  .sw input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:1; }
+  .sw i { position:absolute; inset:0; background:var(--line2); border-radius:99px; transition:.15s; }
+  .sw i::after { content:""; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#d8d8e0; border-radius:50%; transition:.15s; }
+  .sw input:checked + i { background:var(--accent); box-shadow:0 0 10px var(--glow); }
+  .sw input:checked + i::after { transform:translateX(16px); background:#fff; }
+  .sw input:disabled { cursor:not-allowed; } .sw input:disabled + i { opacity:.4; }
+
+  table { width:100%; border-collapse:collapse; } td { padding:6px 0; border-bottom:1px solid var(--line); } tr:last-child td { border-bottom:0; } td:last-child { text-align:right; color:var(--accent2); font-variant-numeric:tabular-nums; }
+  .empty { color:var(--muted); text-align:center; padding:60px 10px; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; } ::-webkit-scrollbar-thumb { background:var(--line2); border-radius:8px; } ::-webkit-scrollbar-track { background:transparent; }
+
+  @media (max-width:760px) {
+    .body { flex-direction:column; }
+    .side { width:100%; border-right:0; border-bottom:1px solid var(--line); display:flex; gap:6px; overflow-x:auto; padding:8px; }
+    .side h4 { display:none; } .acct { flex:none; }
+    .main { padding:12px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1><b>Feral</b> Panel</h1>
-  <span class="grow"></span>
-  <span id="conn" class="pill">offline</span>
-  <button id="logout" class="hidden">Log out</button>
-</header>
-<main>
-  <section id="login" class="login">
-    <h2>Enter your key</h2>
-    <p>Enter the same key you typed into the hub's Remote Panel.</p>
-    <form id="form" class="row">
-      <input id="key" type="password" placeholder="your key" autocomplete="off" spellcheck="false">
-      <button class="primary" type="submit">Connect</button>
-    </form>
-    <div id="err" class="err"></div>
-  </section>
 
-  <section id="app" class="hidden">
-    <div id="tabs" class="tabs"></div>
-    <div id="acct"></div>
-    <div id="none" class="empty hidden">No account is connected with this key right now. Open the hub in Roblox, type the key in Remote Panel and press Connect. (If you are sure it is connected, check the key for typos.)</div>
-  </section>
-</main>
+<section id="login">
+  <div class="frame">
+    <div class="card">
+      <h2>Feral Panel</h2>
+      <p>Enter the key you typed into the hub.</p>
+      <form id="form">
+        <input id="key" type="password" placeholder="your key" autocomplete="off" spellcheck="false">
+        <button class="primary" type="submit">Connect</button>
+      </form>
+      <div id="err" class="err"></div>
+    </div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand"><img src="img/emblem.png" alt=""><span><b>Feral</b> <span class="ver">v1.0</span></span></div>
+    <span class="grow"></span>
+    <span class="status"><span id="cdot" class="dot"></span><span id="conn">offline</span></span>
+    <button id="logout">Log out</button>
+  </div>
+  <div class="body">
+    <aside class="side"><h4>Accounts</h4><div id="tabs"></div></aside>
+    <div class="main"><div class="col" id="acct"></div></div>
+  </div>
+</section>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
   const accounts = new Map();   // userId -> account view
-  let selected = null, key = "", retry = 0, loggedIn = false;
+  let selected = null, key = "", loggedIn = false, timer = null;
+  const search = { toggles: "", inv: "" };
+  const pending = new Map();    // toggles flipped on the site, shown until the hub confirms
   const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
   const el = (tag, props = {}, ...kids) => {
     const e = document.createElement(tag);
@@ -97,85 +147,87 @@
     for (const c of kids) e.append(c);
     return e;
   };
-  const store = { get: () => { try { return sessionStorage.getItem("feral_key") || ""; } catch { return ""; } },
-                  set: (v) => { try { v ? sessionStorage.setItem("feral_key", v) : sessionStorage.removeItem("feral_key"); } catch {} } };
+  const store = {
+    get: () => { try { return sessionStorage.getItem("feral_key") || ""; } catch { return ""; } },
+    set: (v) => { try { v ? sessionStorage.setItem("feral_key", v) : sessionStorage.removeItem("feral_key"); } catch {} },
+  };
 
-  function setConn(text, cls) { const c = $("conn"); c.textContent = text; c.className = "pill " + (cls || ""); }
+  function setConn(text, ok) { $("conn").textContent = text; $("cdot").className = "dot" + (ok ? " on" : ""); }
+  function showApp(on) { $("login").classList.toggle("hidden", on); $("app").classList.toggle("hidden", !on); }
 
   async function api(path, payload) {
     const r = await fetch("/api/" + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     return r.json();
   }
 
-  let timer = null;
   async function poll() {
     clearTimeout(timer);
     try {
       const m = await api("view", { key });
       if (!m.ok) {
-        $("err").textContent = m.error || "key rejected"; store.set(""); loggedIn = false; setConn("offline", "bad");
-        $("login").classList.remove("hidden"); $("app").classList.add("hidden"); $("logout").classList.add("hidden");
+        $("err").textContent = m.error || "key rejected"; store.set(""); loggedIn = false; showApp(false);
         return;
       }
-      if (!loggedIn) { loggedIn = true; store.set(key); $("login").classList.add("hidden"); $("app").classList.remove("hidden"); $("logout").classList.remove("hidden"); }
-      setConn("live", "ok");
+      if (!loggedIn) { loggedIn = true; store.set(key); showApp(true); }
+      setConn("live", true);
       accounts.clear(); m.accounts.forEach((a) => accounts.set(a.userId, a)); render();
-    } catch { setConn("offline", "bad"); }
+    } catch { setConn("offline", false); }
     timer = setTimeout(poll, 3000);
   }
-  function connect() { poll(); }
 
   $("form").addEventListener("submit", (e) => {
     e.preventDefault(); key = $("key").value.trim(); $("err").textContent = ""; if (!key) return;
-    loggedIn = false; connect();
+    loggedIn = false; poll();
   });
   $("logout").addEventListener("click", () => { store.set(""); loggedIn = false; clearTimeout(timer); location.reload(); });
-  const saved = store.get(); if (saved) { key = saved; connect(); }
+  const saved = store.get(); if (saved) { key = saved; poll(); }
 
   // ------------------------------------------------------------ render
-  const search = { toggles: "", inv: "" };
-  const pending = new Map();
+  function section(title, ...kids) { return el("div", { class: "sec" }, el("h3", { text: title }), ...kids); }
 
   function render() {
     const ids = [...accounts.keys()];
     if (selected === null || !accounts.has(selected)) selected = ids[0] ?? null;
-    $("none").classList.toggle("hidden", ids.length > 0);
 
     const tabs = $("tabs"); tabs.replaceChildren();
+    if (!ids.length) tabs.append(el("div", { class: "none", text: "No accounts" }));
     for (const id of ids) {
       const a = accounts.get(id);
-      const t = el("div", { class: "tab" + (id === selected ? " sel" : "") }, el("span", { class: "dot" + (a.online ? " on" : "") }), el("span", { text: a.name }));
+      const t = el("div", { class: "acct" + (id === selected ? " sel" : "") }, el("span", { class: "dot" + (a.online ? " on" : "") }), el("span", { class: "n", text: a.name }));
       t.onclick = () => { selected = id; render(); };
       tabs.append(t);
     }
+
     const root = $("acct");
-    const keepScroll = [...root.querySelectorAll(".body")].map((b) => b.scrollTop);
+    const keepScroll = [...root.querySelectorAll(".scroll")].map((b) => b.scrollTop);
     const focusId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.search : null;
-    root.replaceChildren();
-    if (selected === null) return;
+    root.replaceChildren(el("img", { class: "banner", src: "img/header3d.png", alt: "" }));
+    if (selected === null) {
+      root.append(el("div", { class: "empty", text: "No account is connected with this key right now. Open the hub in Roblox, type the key in Remote Panel and press Connect. (If you are sure it is connected, check the key for typos.)" }));
+      return;
+    }
     const a = accounts.get(selected), s = a.state;
     if (!s) { root.append(el("div", { class: "empty", text: "Waiting for first update…" })); return; }
 
-    const grid = el("div", { class: "grid" });
+    // account
+    const grid = el("div", { class: "stats" });
     const stat = (k, v) => grid.append(el("div", { class: "stat" }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v })));
     stat("Status", !a.online ? "Offline" : (s.status.alive ? (s.status.text || "Online") : "Dead / loading"));
     stat("Level", fmt(s.stats.level)); stat("Peli", fmt(s.stats.peli)); stat("Bounty", fmt(s.stats.bounty));
     stat("Fruit", s.stats.fruit || "—"); stat("Race", s.stats.race || "—");
     if (s.status.health !== null) stat("Health", fmt(s.status.health));
-    stat("Last update", a.seen ? new Date(a.seen).toLocaleTimeString() : "—");
-    root.append(grid);
+    stat("Updated", a.seen ? new Date(a.seen).toLocaleTimeString() : "—");
+    root.append(section(a.name, grid));
 
-    const activeCard = el("div", { class: "card", style: "margin-bottom:14px" }, el("h3", { text: `Doing right now (${s.status.active.length})` }));
-    const chips = el("div", { class: "body chips" });
+    // doing right now
+    const chips = el("div", { class: "pad chips" });
     if (!s.status.active.length) chips.append(el("span", { class: "muted", text: "Nothing enabled." }));
     s.status.active.forEach((n) => chips.append(el("span", { class: "chip", text: n })));
-    activeCard.append(chips); root.append(activeCard);
+    root.append(section(`Doing right now (${s.status.active.length})`, chips));
 
-    const cols = el("div", { class: "cols" });
-    cols.append(toggleCard(a, s), inventoryCard(s));
-    root.append(cols);
+    root.append(toggleSection(a, s), inventorySection(s));
 
-    root.querySelectorAll(".body").forEach((b, i) => { if (keepScroll[i] !== undefined) b.scrollTop = keepScroll[i]; });
+    root.querySelectorAll(".scroll").forEach((b, i) => { if (keepScroll[i] !== undefined) b.scrollTop = keepScroll[i]; });
     if (focusId) { const f = root.querySelector(`[data-search="${focusId}"]`); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }
   }
 
@@ -186,34 +238,32 @@
     return el("div", { class: "search" }, i);
   }
 
-  function toggleCard(a, s) {
-    const card = el("div", { class: "card" }, el("h3", { text: "Features" }), searchBox("toggles"));
-    const body = el("div", { class: "body" });
+  function toggleSection(a, s) {
+    const body = el("div", { class: "pad scroll" });
     const q = search.toggles.toLowerCase();
     const list = s.toggles.filter((t) => t.title.toLowerCase().includes(q));
     if (!list.length) body.append(el("div", { class: "muted", text: "No matches." }));
     for (const t of list) {
-      const p = pending.get(a.userId + ":" + t.id);
-      if (p) { if (p.v === t.value || Date.now() > p.until) pending.delete(a.userId + ":" + t.id); else t.value = p.v; }
+      const pk = a.userId + ":" + t.id, p = pending.get(pk);
+      if (p) { if (p.v === t.value || Date.now() > p.until) pending.delete(pk); else t.value = p.v; }
       const cb = el("input", { type: "checkbox", checked: t.value, disabled: !a.online });
       cb.onchange = () => {
-        pending.set(a.userId + ":" + t.id, { v: cb.checked, until: Date.now() + 25000 }); // keep showing it until the hub confirms
+        pending.set(pk, { v: cb.checked, until: Date.now() + 25000 });
         api("set", { key, userId: a.userId, id: t.id, value: cb.checked });
       };
-      body.append(el("div", { class: "trow" }, el("span", { text: t.title }), el("label", { class: "sw" }, cb, el("span"))));
+      body.append(el("div", { class: "row" }, el("span", { text: t.title }), el("label", { class: "sw" }, cb, el("i"))));
     }
-    card.append(body); return card;
+    return section("Features", searchBox("toggles"), body);
   }
 
-  function inventoryCard(s) {
+  function inventorySection(s) {
     const entries = Object.entries(s.inventory).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]));
-    const card = el("div", { class: "card" }, el("h3", {}, el("span", { text: "Inventory" }), el("span", { class: "muted", text: `${entries.length} items` })), searchBox("inv"));
-    const body = el("div", { class: "body" });
     const q = search.inv.toLowerCase();
     const list = entries.filter(([n]) => n.toLowerCase().includes(q));
+    const body = el("div", { class: "pad scroll" });
     if (!list.length) body.append(el("div", { class: "muted", text: entries.length ? "No matches." : "Inventory empty." }));
     else { const tb = el("table"); list.forEach(([n, c]) => tb.append(el("tr", {}, el("td", { text: n }), el("td", { text: "×" + fmt(c) })))); body.append(tb); }
-    card.append(body); return card;
+    return section(`Inventory (${entries.length})`, searchBox("inv"), body);
   }
 })();
 </script>
