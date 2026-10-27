@@ -19,6 +19,6 @@ module.exports = async (req, res) => {
     accounts.sort((x, y) => x.name.localeCompare(y.name));
     return reply(res, 200, { ok: true, label: found.rec.label, accounts });
   } catch (e) {
-    return reply(res, 500, { ok: false, error: "server error" });
+    return reply(res, 500, { ok: false, error: String((e && e.message) || "server error").slice(0, 200) });
   }
 };
