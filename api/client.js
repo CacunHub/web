@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
       ["LPOP", cmdKey, 50],
       ["GET", `view:${h}`],
     ]);
-    const commands = (results[3] || []).map(jparse).filter((c) => c && typeof c.id === "string" && typeof c.value === "boolean");
+    const commands = (results[3] || []).map(jparse).filter((c) => c && typeof c.id === "string" && c.value !== undefined);
     // drop ids that expired
     const dead = ids.filter((_, i) => live[i] === null);
     if (dead.length) await cmd("SREM", idsKey, ...dead);
