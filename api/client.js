@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
     const live = ids.length ? await cmd("MGET", ...ids.map((i) => `acct:${h}:${i}`)) : [];
     const liveIds = ids.filter((_, i) => live[i] !== null);
     if (!liveIds.includes(String(userId)) && liveIds.length >= found.rec.maxAccounts) {
-      return reply(res, 200, { ok: false, error: found.rec.maxAccounts === 1 ? "this key is already in use by another account" : "this key is already in use by the maximum number of accounts" });
+      return reply(res, 200, { ok: false, error: `this key already has ${found.rec.maxAccounts} accounts connected (the maximum)` });
     }
 
     const acct = { name: m.name, seen: Date.now(), state: cleanState(m.state) };
